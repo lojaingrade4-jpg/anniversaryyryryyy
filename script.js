@@ -5473,15 +5473,48 @@ function escapeAttribute(value) {
     "Zoro", "Zuko"
  ];
 
- let alterProfiles = JSON.parse(
-    localStorage.getItem("loveExeAlters") || "[]"
- );
+ let alterProfiles = [];
+
+ try {
+    const savedAlters = JSON.parse(
+        localStorage.getItem("loveExeAlters") || "[]"
+    );
+
+    if (Array.isArray(savedAlters)) {
+        alterProfiles = savedAlters.map(profile => ({
+            id: String(profile.id || (
+                Date.now().toString(36) +
+                Math.random().toString(36).slice(2)
+            )),
+            name: String(profile.name || ""),
+            pronouns: String(profile.pronouns || ""),
+            source: String(profile.source || ""),
+            role: String(profile.role || ""),
+            personality: String(profile.personality || ""),
+            appearance: String(profile.appearance || ""),
+            notes: String(profile.notes || ""),
+            createdAt: profile.createdAt || new Date().toISOString()
+        }));
+    }
+ } catch (error) {
+    console.error("Could not load alter profiles:", error);
+ }
 
  let alterSearch = "";
  let alterLetter = "ALL";
 
  function saveAlterProfiles() {
-    localStorage.setItem("loveExeAlters", JSON.stringify(alterProfiles));
+    try {
+        localStorage.setItem(
+            "loveExeAlters",
+            JSON.stringify(alterProfiles)
+        );
+        return true;
+    } catch (error) {
+        console.error("Could not save alter profiles:", error);
+        alert("couldnt save alters ♡ your browser storage may be full");
+        return false;
+    }
  }
 
  function escapeAttribute(value) {
@@ -5490,7 +5523,8 @@ function escapeAttribute(value) {
 
  function newAlterProfile(name) {
     return {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        id: Date.now().toString(36) +
+            Math.random().toString(36).slice(2),
         name: name || "",
         pronouns: "",
         source: "",
@@ -5507,17 +5541,27 @@ function escapeAttribute(value) {
         <div class="alters-window">
             <div class="alters-titlebar">
                 🧩 ALTERS.EXE
-                <button id="alters-back">← DESKTOP</button>
+                <button id="alters-back" type="button">← DESKTOP</button>
             </div>
+
             <h1>♡ ALTER DATABASE ♡</h1>
             <p>every alter has their own space !!!</p>
-            <input id="alter-search" placeholder="search alter names...">
+
+            <input id="alter-search"
+                placeholder="search alter names..."
+                value="${escapeAttribute(alterSearch)}">
+
             <div id="alter-letters">
                 ${["ALL", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map(letter =>
-                    `<button class="alter-letter" data-letter="${letter}">${letter}</button>`
+                    `<button type="button" class="alter-letter"
+                        data-letter="${letter}">${letter}</button>`
                 ).join("")}
             </div>
-            <button id="alter-create">＋ CREATE CUSTOM ALTER</button>
+
+            <button id="alter-create" type="button">
+                ＋ CREATE CUSTOM ALTER
+            </button>
+
             <div id="alter-list"></div>
         </div>
     `;
@@ -5538,12 +5582,13 @@ function escapeAttribute(value) {
         });
     });
 
-    document.getElementById("alter-create").addEventListener("click", () => {
-        const profile = newAlterProfile("");
-        alterProfiles.push(profile);
-        saveAlterProfiles();
-        editAlter(profile.id);
-    });
+    document.getElementById("alter-create")
+        .addEventListener("click", () => {
+            const profile = newAlterProfile("");
+            alterProfiles.push(profile);
+            saveAlterProfiles();
+            editAlter(profile.id);
+        });
 
     renderAlterList();
  }
@@ -5577,15 +5622,19 @@ function escapeAttribute(value) {
         label.textContent = name;
 
         const button = document.createElement("button");
-        const existing = alterProfiles.find(
-            profile => profile.name.toLowerCase() === name.toLowerCase()
+        button.type = "button";
+
+        const existing = alterProfiles.find(profile =>
+            profile.name.toLowerCase() === name.toLowerCase()
         );
 
-        button.textContent = existing ? "✏️ OPEN PROFILE" : "＋ ADD PROFILE";
+        button.textContent = existing
+            ? "✏️ OPEN PROFILE"
+            : "＋ ADD PROFILE";
 
         button.addEventListener("click", () => {
-            let profile = alterProfiles.find(
-                item => item.name.toLowerCase() === name.toLowerCase()
+            let profile = alterProfiles.find(item =>
+                item.name.toLowerCase() === name.toLowerCase()
             );
 
             if (!profile) {
@@ -5606,8 +5655,8 @@ function escapeAttribute(value) {
     list.appendChild(customHeading);
 
     const customProfiles = alterProfiles.filter(profile =>
-        !premadeAlterNames.some(
-            name => name.toLowerCase() === profile.name.toLowerCase()
+        !premadeAlterNames.some(name =>
+            name.toLowerCase() === profile.name.toLowerCase()
         )
     );
 
@@ -5627,22 +5676,30 @@ function escapeAttribute(value) {
         const label = document.createElement("span");
         label.textContent = profile.name || "unnamed alter";
 
-        const button = document.createElement("button");
-        button.textContent = "✏️ EDIT";
-        button.addEventListener("click", () => editAlter(profile.id));
+        const actions = document.createElement("div");
 
-        const remove = document.createElement("button");
-        remove.textContent = "🗑️";
-        remove.title = "Delete profile";
-        remove.addEventListener("click", () => {
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.textContent = "✏️ EDIT";
+        editButton.addEventListener("click", () => editAlter(profile.id));
+
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.textContent = "🗑️";
+        removeButton.title = "Delete profile";
+
+        removeButton.addEventListener("click", () => {
             if (!confirm("delete this profile? ♡")) return;
-            alterProfiles = alterProfiles.filter(item => item.id !== profile.id);
+
+            alterProfiles = alterProfiles.filter(
+                item => item.id !== profile.id
+            );
+
             saveAlterProfiles();
             renderAlterList();
         });
 
-        const actions = document.createElement("div");
-        actions.append(button, remove);
+        actions.append(editButton, removeButton);
         row.append(label, actions);
         list.appendChild(row);
     });
@@ -5656,7 +5713,9 @@ function escapeAttribute(value) {
         <div class="alters-window">
             <div class="alters-titlebar">
                 🧩 ALTER PROFILE
-                <button id="alter-editor-back">← DATABASE</button>
+                <button id="alter-editor-back" type="button">
+                    ← DATABASE
+                </button>
             </div>
 
             <h1>♡ ALTER PROFILE ♡</h1>
@@ -5683,22 +5742,29 @@ function escapeAttribute(value) {
 
                 <label for="profile-personality">personality</label>
                 <textarea id="profile-personality" maxlength="10000"
-                    placeholder="personality traits...">${escapeHTML(profile.personality || "")}</textarea>
+                    placeholder="personality traits...">${escapeHTML(profile.personality)}</textarea>
 
                 <label for="profile-appearance">appearance</label>
                 <textarea id="profile-appearance" maxlength="10000"
-                    placeholder="what they look like...">${escapeHTML(profile.appearance || "")}</textarea>
+                    placeholder="what they look like...">${escapeHTML(profile.appearance)}</textarea>
 
                 <label for="profile-notes">extra notes</label>
                 <textarea id="profile-notes" maxlength="20000"
-                    placeholder="anything else to remember...">${escapeHTML(profile.notes || "")}</textarea>
+                    placeholder="anything else to remember...">${escapeHTML(profile.notes)}</textarea>
 
                 <p>
                     <button type="submit">💾 SAVE PROFILE</button>
-                    <button id="alter-editor-cancel" type="button">CANCEL</button>
+                    <button id="alter-editor-cancel" type="button">
+                        CANCEL
+                    </button>
                 </p>
+
                 <p id="alter-profile-status" role="status"></p>
             </form>
+
+            <button id="alter-delete-profile" type="button">
+                🗑️ DELETE PROFILE
+            </button>
         </div>
     `;
 
@@ -5708,56 +5774,85 @@ function escapeAttribute(value) {
     document.getElementById("alter-editor-cancel")
         .addEventListener("click", showAlters);
 
+    document.getElementById("alter-delete-profile")
+        .addEventListener("click", () => {
+            if (!confirm("delete this profile? ♡")) return;
+
+            alterProfiles = alterProfiles.filter(
+                item => item.id !== id
+            );
+
+            saveAlterProfiles();
+            showAlters();
+        });
+
     document.getElementById("alter-profile-form")
         .addEventListener("submit", event => {
             event.preventDefault();
 
-            const name = document.getElementById("profile-name").value.trim();
+            const status = document.getElementById(
+                "alter-profile-status"
+            );
+
+            const name = document.getElementById("profile-name")
+                .value.trim();
 
             if (!name) {
-                document.getElementById("alter-profile-status")
-                    .textContent = "please enter a name ♡";
+                status.textContent = "please enter a name ♡";
                 return;
             }
 
             profile.name = name;
-            profile.pronouns =
-                document.getElementById("profile-pronouns").value.trim();
-            profile.source =
-                document.getElementById("profile-source").value.trim();
-            profile.role =
-                document.getElementById("profile-role").value.trim();
-            profile.personality =
-                document.getElementById("profile-personality").value;
-            profile.appearance =
-                document.getElementById("profile-appearance").value;
-            profile.notes =
-                document.getElementById("profile-notes").value;
+            profile.pronouns = document.getElementById(
+                "profile-pronouns"
+            ).value.trim();
 
-            saveAlterProfiles();
-            showAlters();
+            profile.source = document.getElementById(
+                "profile-source"
+            ).value.trim();
+
+            profile.role = document.getElementById(
+                "profile-role"
+            ).value.trim();
+
+            profile.personality = document.getElementById(
+                "profile-personality"
+            ).value;
+
+            profile.appearance = document.getElementById(
+                "profile-appearance"
+            ).value;
+
+            profile.notes = document.getElementById(
+                "profile-notes"
+            ).value;
+
+            if (saveAlterProfiles()) {
+                showAlters();
+            } else {
+                status.textContent = "couldnt save profile ♡";
+            }
         });
  }
 
  /* ===== DIARY.EXE ===== */
 
  async function showDiary() {
-    const { data: { user }, error: userError } =
-        await loveExeSupabase.auth.getUser();
+    let user;
 
-    if (userError || !user) {
-        showAuthScreen("please log in to open your diary ♡");
-        return;
-    }
+    try {
+        const { data, error } =
+            await loveExeSupabase.auth.getUser();
 
-    const { data: entries, error } = await loveExeSupabase
-        .from("diary_entries")
-        .select("id, user_id, title, content, created_at")
-        .order("created_at", { ascending: false });
+        if (error || !data || !data.user) {
+            showAuthScreen("please log in to open your diary ♡");
+            return;
+        }
 
-    if (error) {
-        console.error("DIARY.EXE load error:", error.message);
-        alert("couldnt load your diary ♡");
+        user = data.user;
+    } catch (error) {
+        console.error("DIARY.EXE authentication error:", error);
+        alert("couldnt check your login ♡ please try again");
         return;
     }
 
@@ -5786,7 +5881,10 @@ function escapeAttribute(value) {
                                width:100%;height:160px;padding:7px;
                                margin:6px 0 12px;"></textarea>
 
-                    <button id="diary-save" type="submit">💾 SAVE ENTRY</button>
+                    <button id="diary-save" type="submit">
+                        💾 SAVE ENTRY
+                    </button>
+
                     <button id="diary-cancel" type="button" hidden>
                         CANCEL EDIT
                     </button>
@@ -5795,8 +5893,11 @@ function escapeAttribute(value) {
                 <p id="diary-status" role="status"></p>
                 <hr>
                 <h3>♡ saved entries</h3>
-                <div id="diary-entry-list"></div>
-                <button id="diary-back" type="button">↩ BACK TO DESKTOP</button>
+                <div id="diary-entry-list">loading entries... ♡</div>
+
+                <button id="diary-back" type="button">
+                    ↩ BACK TO DESKTOP
+                </button>
             </div>
         </div>
     `;
@@ -5816,9 +5917,122 @@ function escapeAttribute(value) {
         form.reset();
         saveButton.textContent = "💾 SAVE ENTRY";
         cancelButton.hidden = true;
+        status.textContent = "";
     }
 
     cancelButton.addEventListener("click", resetForm);
+
+    document.getElementById("diary-back")
+        .addEventListener("click", renderDesktop);
+
+    async function loadEntries() {
+        list.textContent = "loading entries... ♡";
+
+        try {
+            const { data: entries, error } = await loveExeSupabase
+                .from("diary_entries")
+                .select("id, user_id, title, content, created_at")
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+
+            list.innerHTML = "";
+
+            if (!entries || entries.length === 0) {
+                list.textContent =
+                    "no entries yet... write the first one! ♡";
+                return;
+            }
+
+            for (const entry of entries) {
+                const card = document.createElement("article");
+
+                card.style.cssText =
+                    "background:white;border:1px solid #808080;" +
+                    "padding:10px;margin:12px 0;";
+
+                const heading = document.createElement("h4");
+                heading.textContent = entry.title || "untitled ♡";
+
+                const date = document.createElement("small");
+                date.textContent = entry.created_at
+                    ? new Date(entry.created_at).toLocaleString()
+                    : "";
+
+                const body = document.createElement("p");
+                body.style.whiteSpace = "pre-wrap";
+                body.textContent = entry.content || "";
+
+                card.append(heading, date, body);
+
+                if (entry.user_id === user.id) {
+                    const editButton = document.createElement("button");
+                    editButton.type = "button";
+                    editButton.textContent = "✏️ EDIT";
+
+                    editButton.addEventListener("click", () => {
+                        editingId = entry.id;
+                        titleInput.value = entry.title || "";
+                        contentInput.value = entry.content || "";
+                        saveButton.textContent = "💾 SAVE CHANGES";
+                        cancelButton.hidden = false;
+                        status.textContent = "";
+                        titleInput.focus();
+
+                        form.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start"
+                        });
+                    });
+
+                    const deleteButton = document.createElement("button");
+                    deleteButton.type = "button";
+                    deleteButton.textContent = "🗑️ DELETE";
+                    deleteButton.style.marginLeft = "6px";
+
+                    deleteButton.addEventListener("click", async () => {
+                        if (!confirm(
+                            "delete this diary entry forever? ♡"
+                        )) return;
+
+                        deleteButton.disabled = true;
+
+                        try {
+                            const { error: deleteError } =
+                                await loveExeSupabase
+                                    .from("diary_entries")
+                                    .delete()
+                                    .eq("id", entry.id)
+                                    .eq("user_id", user.id);
+
+                            if (deleteError) throw deleteError;
+
+                            await loadEntries();
+                            status.textContent = "entry deleted ♡";
+                        } catch (error) {
+                            console.error(
+                                "DIARY.EXE delete error:", error
+                            );
+                            alert("couldnt delete this entry ♡");
+                            deleteButton.disabled = false;
+                        }
+                    });
+
+                    card.append(editButton, deleteButton);
+                } else {
+                    const shared = document.createElement("small");
+                    shared.textContent = "♡ shared with you";
+                    card.append(shared);
+                }
+
+                list.appendChild(card);
+            }
+        } catch (error) {
+            console.error("DIARY.EXE load error:", error);
+            list.textContent =
+                "couldnt load entries ♡ please check your connection";
+        }
+    }
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
@@ -5832,148 +6046,54 @@ function escapeAttribute(value) {
         }
 
         saveButton.disabled = true;
+        cancelButton.disabled = true;
         status.textContent = "saving... ♡";
 
-        let result;
+        try {
+            let result;
 
-        if (editingId !== null) {
-            result = await loveExeSupabase
-                .from("diary_entries")
-                .update({
-                    title,
-                    content,
-                    updated_at: new Date().toISOString()
-                })
-                .eq("id", editingId)
-                .eq("user_id", user.id);
-        } else {
-            result = await loveExeSupabase
-                .from("diary_entries")
-                .insert({
-                    user_id: user.id,
-                    title,
-                    content
-                });
-        }
-
-        saveButton.disabled = false;
-
-        if (result.error) {
-            console.error("DIARY.EXE save error:", result.error.message);
-            status.textContent = "couldnt save. please try again ♡";
-            return;
-        }
-
-        await showDiary();
-    });
-
-    if (!entries || entries.length === 0) {
-        list.textContent = "no entries yet... write the first one! ♡";
-    }
-
-    for (const entry of entries || []) {
-        const card = document.createElement("article");
-        card.style.cssText =
-            "background:white;border:1px solid #808080;" +
-            "padding:10px;margin:12px 0;";
-
-        const heading = document.createElement("h4");
-        heading.textContent = entry.title || "untitled ♡";
-
-        const date = document.createElement("small");
-        date.textContent = entry.created_at
-            ? new Date(entry.created_at).toLocaleString()
-            : "";
-
-        const body = document.createElement("p");
-        body.style.whiteSpace = "pre-wrap";
-        body.textContent = entry.content || "";
-
-        card.append(heading, date, body);
-
-        if (entry.user_id === user.id) {
-            const editButton = document.createElement("button");
-            editButton.textContent = "✏️ EDIT";
-
-            editButton.addEventListener("click", () => {
-                editingId = entry.id;
-                titleInput.value = entry.title || "";
-                contentInput.value = entry.content || "";
-                saveButton.textContent = "💾 SAVE CHANGES";
-                cancelButton.hidden = false;
-                titleInput.focus();
-                form.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-            });
-
-            const deleteButton = document.createElement("button");
-            deleteButton.textContent = "🗑️ DELETE";
-            deleteButton.style.marginLeft = "6px";
-
-            deleteButton.addEventListener("click", async () => {
-                if (!confirm("delete this diary entry forever? ♡")) return;
-
-                deleteButton.disabled = true;
-
-                const { error: deleteError } = await loveExeSupabase
+            if (editingId !== null) {
+                result = await loveExeSupabase
                     .from("diary_entries")
-                    .delete()
-                    .eq("id", entry.id)
+                    .update({
+                        title,
+                        content,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq("id", editingId)
                     .eq("user_id", user.id);
+            } else {
+                result = await loveExeSupabase
+                    .from("diary_entries")
+                    .insert({
+                        user_id: user.id,
+                        title,
+                        content
+                    });
+            }
 
-                if (deleteError) {
-                    console.error("DIARY.EXE delete error:", deleteError.message);
-                    alert("couldnt delete this entry ♡");
-                    deleteButton.disabled = false;
-                    return;
-                }
+            if (result.error) throw result.error;
 
-                await showDiary();
-            });
+            resetForm();
+            status.textContent = "entry saved successfully ♡";
 
-            card.append(editButton, deleteButton);
-        } else {
-            const shared = document.createElement("small");
-            shared.textContent = "♡ shared with you";
-            card.append(shared);
+            await loadEntries();
+            status.textContent = "entry saved successfully ♡";
+        } catch (error) {
+            console.error("DIARY.EXE save error:", error);
+            status.textContent =
+                "couldnt save entry ♡ please try again";
+        } finally {
+            saveButton.disabled = false;
+            cancelButton.disabled = false;
         }
-
-        list.append(card);
-    }
-
-    document.getElementById("diary-back")
-        .addEventListener("click", renderDesktop);
-}
-
-    const removeImageButton = document.getElementById("alter-remove-image");
-
-    if (removeImageButton) {
-        removeImageButton.addEventListener("click", () => {
-            collectAlterFields();
-            profile.image = "";
-            saveAlterProfiles();
-            editAlter(id);
-        });
-    }
-
-    document.getElementById("alter-save").addEventListener("click", () => {
-        collectAlterFields();
-        saveAlterProfiles();
-        alert("profile saved ♡");
-        showAlters();
     });
 
-    document.getElementById("alter-delete").addEventListener("click", () => {
-        if (!confirm("delete this profile?")) return;
+    await loadEntries();
+ }
 
-        alterProfiles = alterProfiles.filter(item => item.id !== id);
-        saveAlterProfiles();
-        showAlters();
-    });
-}
+ /* ===== STARTUP ===== */
 
-showHome();
+ showHome();
 
 });
