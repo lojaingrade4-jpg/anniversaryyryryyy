@@ -5524,7 +5524,7 @@ function escapeAttribute(value) {
 
     renderAlterList();
  }
-    
+
 async function showDiary() {
     const { data: { user }, error: userError } =
         await loveExeSupabase.auth.getUser();
@@ -5540,106 +5540,94 @@ async function showDiary() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error("DIARY.EXE error:", error.message);
-        alert("DIARY.EXE couldn't load. please try again ♡");
+        console.error("DIARY.EXE:", error.message);
+        alert("couldnt load your diary ♡");
         return;
     }
 
     computerScreen.innerHTML = `
-        <div style="
-            background:#008080;
-            min-height:100%;
-            padding:14px;
-            box-sizing:border-box;
-            font-family:Tahoma, sans-serif;
-        ">
-            <div style="
-                background:#c0c0c0;
-                border:2px outset white;
-                max-width:600px;
-                margin:auto;
-                padding:12px;
-                color:#000;
-            ">
-                <div style="
-                    background:navy;
-                    color:white;
-                    padding:8px;
-                    font-weight:bold;
-                    margin-bottom:12px;
-                ">📔 DIARY.EXE — MY ENTRIES ♡</div>
+        <div style="padding:16px;background:#c0c0c0;color:#000;
+                    font-family:Tahoma,sans-serif;min-height:350px;">
+            <h2 style="margin-top:0;">📔 DIARY.EXE ♡</h2>
+            <p>your little corner of the world ♡</p>
 
-                <label for="diary-title">entry title</label>
-                <input id="diary-title"
-                    maxlength="100"
-                    placeholder="a little title..."
-                    style="display:block;width:95%;margin:6px 0 12px;padding:7px;">
+            <form id="diary-form">
+                <input id="diary-title" maxlength="100"
+                    placeholder="entry title..."
+                    required
+                    style="display:block;width:95%;padding:7px;margin-bottom:8px;">
 
-                <label for="diary-content">dear diary...</label>
-                <textarea id="diary-content"
-                    maxlength="20000"
-                    placeholder="write your thoughts here ♡"
-                    style="display:block;width:95%;height:180px;margin:6px 0 12px;padding:7px;resize:vertical;"></textarea>
+                <textarea id="diary-content" maxlength="20000"
+                    placeholder="write your thoughts here..."
+                    required rows="5"
+                    style="box-sizing:border-box;width:100%;padding:8px;"></textarea>
 
-                <button id="diary-save">💾 SAVE ENTRY</button>
-                <button id="diary-back">↩ BACK TO DESKTOP</button>
+                <button type="submit" id="diary-save">♡ save entry</button>
+                <button type="button" id="diary-cancel" hidden>cancel edit</button>
+            </form>
 
-                <p id="diary-status" role="status"></p>
-
-                <hr>
-                <h3>♡ saved entries</h3>
-                <div id="diary-entry-list"></div>
-            </div>
+            <p id="diary-status" aria-live="polite"></p>
+            <hr>
+            <h3>♡ diary entries ♡</h3>
+            <div id="diary-list"></div>
+            <button id="diary-back" type="button">← back to desktop</button>
         </div>
     `;
 
+    const form = document.getElementById("diary-form");
+    const titleInput = document.getElementById("diary-title");
+    const contentInput = document.getElementById("diary-content");
     const status = document.getElementById("diary-status");
-    const list = document.getElementById("diary-entry-list");
+    const list = document.getElementById("diary-list");
+    const saveButton = document.getElementById("diary-save");
+    const cancelButton = document.getElementById("diary-cancel");
 
-    // Show only entries belonging to the signed-in user,
-    // plus entries owned by the partner when this is your account.
-    const { data: profile, error: profileError } = await loveExeSupabase
-        .from("profiles")
-        .select("username")
-        .eq("id", user.id)
-        .maybeSingle();
+    let editingId = null;
 
-    if (profileError) {
-        status.textContent = "could not check your profile ♡";
-        return;
+    function resetForm() {
+        editingId = null;
+        form.reset();
+        saveButton.textContent = "♡ save entry";
+        cancelButton.hidden = true;
     }
 
-    // Until account identities are configured, show only own entries.
-    const visibleEntries = (entries || []).filter(
-        entry => entry.user_id === user.id
-    );
+    cancelButton.addEventListener("click", resetForm);
 
-    if (visibleEntries.length === 0) {
-        list.textContent = "no entries yet ♡";
-    } else {
-        list.replaceChildren();
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-        visibleEntries.forEach(entry => {
-            const card = document.createElement("div");
-            card.style.cssText =
-                "background:white;border:1px solid #777;padding:10px;margin:10px 0;";
+        const title = titleInput.value.trim();
+        const content = contentInput.value.trim();
 
-            const heading = document.createElement("strong");
-            heading.textContent = entry.title || "untitled ♡";
+        if (!title || !content) {
+            status.textContent = "please fill in both boxes ♡";
+            return;
+        }
 
-            const body = document.createElement("p");
-            body.style.whiteSpace = "pre-wrap";
-            body.textContent = entry.content || "";
+        saveButton.disabled = true;
+        status.textContent = "saving... ♡";
 
-            const date = document.createElement("small");
-            date.textContent = entry.created_at
-                ? new Date(entry.created_at).toLocaleString()
-                : "";
+        let result;
 
-            card.append(heading, body, date);
-            list.appendChild(card);
-        });
-    }
+        if (editingId) {
+            result = await loveExeSupabase
+                .from("diary_entries")
+                .update({
+                    title,
+                    content,
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", editingId)
+                .eq("user_id", user.id);
+        } else {
+            result = await loveExeSupabase
+                .from("diary_entries")
+                .insert({
+                    user_id: user.id,
+                    title,
+                    content
+                });
+        }
 
     document.getElementById("diary-save").addEventListener("click", async () => {
         const title = document.getElementById("diary-title").value.trim();
