@@ -5632,25 +5632,6 @@ async function showDiary() {
                 });
         }
 
-    document.getElementById("diary-save").addEventListener("click", async () => {
-        const title = document.getElementById("diary-title").value.trim();
-        const content = document.getElementById("diary-content").value.trim();
-
-        if (!title && !content) {
-            status.textContent = "write something first !";
-            return;
-        }
-
-        status.textContent = "saving... ";
-
-        const { error: saveError } = await loveExeSupabase
-            .from("diary_entries")
-            .insert({
-                user_id: user.id,
-                title,
-                content
-            });
-
         if (saveError) {
             console.error("DIARY.EXE save error:", saveError.message);
             status.textContent = "couldn't save — please try again ♡";
