@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         computerScreen.innerHTML = `
             <h1>♡ LOVE.EXE LOGIN ♡</h1>
-            <p>sign in to enter our little world ♡</p>
+            <p>sign in to enter your computer!  ♡</p>
 
             <form id="auth-form">
                 <input
@@ -5479,7 +5479,7 @@ function escapeAttribute(value) {
                 <button id="alters-back">← DESKTOP</button>
             </div>
             <h1>♡ ALTER DATABASE ♡</h1>
-            <p>every alter has their own little space ♡</p>
+            <p>every alter has their own space !!! </p>
             <input id="alter-search" placeholder="search alter names...">
             <div id="alter-letters">
                 ${["ALL", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map(letter =>
