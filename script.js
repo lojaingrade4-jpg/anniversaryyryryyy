@@ -29,6 +29,140 @@ document.addEventListener("DOMContentLoaded", () => {
     let isUnlocked = false;
     let clockInterval = null;
     let mapInstance = null;
+    
+    // ============================================================
+    // LOGIN — LOVE.EXE
+    // ============================================================
+
+    function showAuthScreen(message = "") {
+        document.body.classList.remove("password-mode");
+        document.body.classList.remove("desktop-mode");
+
+        computerScreen.innerHTML = `
+            <h1>♡ LOVE.EXE LOGIN ♡</h1>
+            <p>sign in to enter our little world ♡</p>
+
+            <form id="auth-form">
+                <input
+                    type="email"
+                    id="auth-email"
+                    placeholder="email address"
+                    autocomplete="email"
+                    required
+                >
+
+                <br><br>
+
+                <input
+                    type="password"
+                    id="auth-password"
+                    placeholder="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <br><br>
+
+                <button type="submit">LOGIN ♡</button>
+                <button type="button" id="auth-signup">
+                    CREATE ACCOUNT ♡
+                </button>
+            </form>
+
+            <p id="auth-message" role="status"></p>
+        `;
+
+        const form = document.getElementById("auth-form");
+        const emailInput = document.getElementById("auth-email");
+        const passwordInput = document.getElementById("auth-password");
+        const messageBox = document.getElementById("auth-message");
+        const signupButton = document.getElementById("auth-signup");
+
+        messageBox.textContent = message;
+
+        form.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            messageBox.textContent = "logging in... ♡";
+
+            const { data, error } =
+                await loveExeSupabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+            if (error) {
+                messageBox.textContent =
+                    "login failed: " + error.message;
+                return;
+            }
+
+            if (data.session) {
+                showHome();
+            }
+        });
+
+        signupButton.addEventListener("click", async () => {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                messageBox.textContent =
+                    "enter your email and password first ";
+                return;
+            }
+
+            if (password.length < 8) {
+                messageBox.textContent =
+                    "please use a password with at least 8 characters ";
+                return;
+            }
+
+            messageBox.textContent = "creating your account... ";
+
+            const { data, error } =
+                await loveExeSupabase.auth.signUp({
+                    email,
+                    password
+                });
+
+            if (error) {
+                messageBox.textContent =
+                    "could not create account: " + error.message;
+                return;
+            }
+
+            if (data.session) {
+                showHome();
+            } else {
+                messageBox.textContent =
+                    "account created! check your email to confirm it, " +
+                    "then log in !!";
+            }
+        });
+    }
+
+    async function startLoveExe() {
+        const { data, error } =
+            await loveExeSupabase.auth.getSession();
+
+        if (error) {
+            showAuthScreen(
+                "could not check your login. please refresh and try again !"
+            );
+            return;
+        }
+
+        if (data.session) {
+            showHome();
+        } else {
+            showAuthScreen();
+        }
+    }
+
 
     // ============================================================
     // LOVE LETTERS
@@ -5605,6 +5739,6 @@ function escapeAttribute(value) {
     });
  }
 
- showHome();
+startLoveExe();
 
 });
