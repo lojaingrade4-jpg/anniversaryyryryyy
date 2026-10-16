@@ -5484,6 +5484,24 @@ function escapeAttribute(value) {
     localStorage.setItem("loveExeAlters", JSON.stringify(alterProfiles));
  }
 
+ function escapeAttribute(value) {
+    return escapeHTML(String(value ?? ""));
+ }
+
+ function newAlterProfile(name) {
+    return {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        name: name || "",
+        pronouns: "",
+        source: "",
+        role: "",
+        personality: "",
+        appearance: "",
+        notes: "",
+        createdAt: new Date().toISOString()
+    };
+ }
+
  function showAlters() {
     computerScreen.innerHTML = `
         <div class="alters-window">
@@ -5492,7 +5510,7 @@ function escapeAttribute(value) {
                 <button id="alters-back">← DESKTOP</button>
             </div>
             <h1>♡ ALTER DATABASE ♡</h1>
-            <p>every alter has their own space !!! </p>
+            <p>every alter has their own space !!!</p>
             <input id="alter-search" placeholder="search alter names...">
             <div id="alter-letters">
                 ${["ALL", ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"].map(letter =>
@@ -5504,12 +5522,14 @@ function escapeAttribute(value) {
         </div>
     `;
 
-    document.getElementById("alters-back").addEventListener("click", renderDesktop);
+    document.getElementById("alters-back")
+        .addEventListener("click", renderDesktop);
 
-    document.getElementById("alter-search").addEventListener("input", event => {
-        alterSearch = event.target.value.toLowerCase();
-        renderAlterList();
-    });
+    document.getElementById("alter-search")
+        .addEventListener("input", event => {
+            alterSearch = event.target.value.toLowerCase();
+            renderAlterList();
+        });
 
     document.querySelectorAll(".alter-letter").forEach(button => {
         button.addEventListener("click", () => {
@@ -5528,7 +5548,200 @@ function escapeAttribute(value) {
     renderAlterList();
  }
 
-async function showDiary() {
+ function renderAlterList() {
+    const list = document.getElementById("alter-list");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    const names = [...new Set(premadeAlterNames)].filter(name => {
+        const matchesSearch = name.toLowerCase().includes(alterSearch);
+        const matchesLetter = alterLetter === "ALL" ||
+            name.toUpperCase().startsWith(alterLetter);
+
+        return matchesSearch && matchesLetter;
+    });
+
+    const heading = document.createElement("h3");
+    heading.textContent = `♡ premade alters (${names.length})`;
+    list.appendChild(heading);
+
+    names.forEach(name => {
+        const row = document.createElement("div");
+        row.style.cssText =
+            "display:flex;gap:8px;align-items:center;" +
+            "justify-content:space-between;padding:5px;" +
+            "border-bottom:1px solid #888;";
+
+        const label = document.createElement("span");
+        label.textContent = name;
+
+        const button = document.createElement("button");
+        const existing = alterProfiles.find(
+            profile => profile.name.toLowerCase() === name.toLowerCase()
+        );
+
+        button.textContent = existing ? "✏️ OPEN PROFILE" : "＋ ADD PROFILE";
+
+        button.addEventListener("click", () => {
+            let profile = alterProfiles.find(
+                item => item.name.toLowerCase() === name.toLowerCase()
+            );
+
+            if (!profile) {
+                profile = newAlterProfile(name);
+                alterProfiles.push(profile);
+                saveAlterProfiles();
+            }
+
+            editAlter(profile.id);
+        });
+
+        row.append(label, button);
+        list.appendChild(row);
+    });
+
+    const customHeading = document.createElement("h3");
+    customHeading.textContent = "♡ saved custom profiles";
+    list.appendChild(customHeading);
+
+    const customProfiles = alterProfiles.filter(profile =>
+        !premadeAlterNames.some(
+            name => name.toLowerCase() === profile.name.toLowerCase()
+        )
+    );
+
+    if (customProfiles.length === 0) {
+        const empty = document.createElement("p");
+        empty.textContent = "no custom profiles yet ♡";
+        list.appendChild(empty);
+    }
+
+    customProfiles.forEach(profile => {
+        const row = document.createElement("div");
+        row.style.cssText =
+            "display:flex;gap:8px;align-items:center;" +
+            "justify-content:space-between;padding:5px;" +
+            "border-bottom:1px solid #888;";
+
+        const label = document.createElement("span");
+        label.textContent = profile.name || "unnamed alter";
+
+        const button = document.createElement("button");
+        button.textContent = "✏️ EDIT";
+        button.addEventListener("click", () => editAlter(profile.id));
+
+        const remove = document.createElement("button");
+        remove.textContent = "🗑️";
+        remove.title = "Delete profile";
+        remove.addEventListener("click", () => {
+            if (!confirm("delete this profile? ♡")) return;
+            alterProfiles = alterProfiles.filter(item => item.id !== profile.id);
+            saveAlterProfiles();
+            renderAlterList();
+        });
+
+        const actions = document.createElement("div");
+        actions.append(button, remove);
+        row.append(label, actions);
+        list.appendChild(row);
+    });
+ }
+
+ function editAlter(id) {
+    const profile = alterProfiles.find(item => item.id === id);
+    if (!profile) return;
+
+    computerScreen.innerHTML = `
+        <div class="alters-window">
+            <div class="alters-titlebar">
+                🧩 ALTER PROFILE
+                <button id="alter-editor-back">← DATABASE</button>
+            </div>
+
+            <h1>♡ ALTER PROFILE ♡</h1>
+
+            <form id="alter-profile-form">
+                <label for="profile-name">name</label>
+                <input id="profile-name" maxlength="150" required
+                    value="${escapeAttribute(profile.name)}">
+
+                <label for="profile-pronouns">pronouns</label>
+                <input id="profile-pronouns" maxlength="100"
+                    value="${escapeAttribute(profile.pronouns)}"
+                    placeholder="their pronouns...">
+
+                <label for="profile-source">source / origin</label>
+                <input id="profile-source" maxlength="200"
+                    value="${escapeAttribute(profile.source)}"
+                    placeholder="where they are from...">
+
+                <label for="profile-role">role</label>
+                <input id="profile-role" maxlength="200"
+                    value="${escapeAttribute(profile.role)}"
+                    placeholder="their role...">
+
+                <label for="profile-personality">personality</label>
+                <textarea id="profile-personality" maxlength="10000"
+                    placeholder="personality traits...">${escapeHTML(profile.personality || "")}</textarea>
+
+                <label for="profile-appearance">appearance</label>
+                <textarea id="profile-appearance" maxlength="10000"
+                    placeholder="what they look like...">${escapeHTML(profile.appearance || "")}</textarea>
+
+                <label for="profile-notes">extra notes</label>
+                <textarea id="profile-notes" maxlength="20000"
+                    placeholder="anything else to remember...">${escapeHTML(profile.notes || "")}</textarea>
+
+                <p>
+                    <button type="submit">💾 SAVE PROFILE</button>
+                    <button id="alter-editor-cancel" type="button">CANCEL</button>
+                </p>
+                <p id="alter-profile-status" role="status"></p>
+            </form>
+        </div>
+    `;
+
+    document.getElementById("alter-editor-back")
+        .addEventListener("click", showAlters);
+
+    document.getElementById("alter-editor-cancel")
+        .addEventListener("click", showAlters);
+
+    document.getElementById("alter-profile-form")
+        .addEventListener("submit", event => {
+            event.preventDefault();
+
+            const name = document.getElementById("profile-name").value.trim();
+
+            if (!name) {
+                document.getElementById("alter-profile-status")
+                    .textContent = "please enter a name ♡";
+                return;
+            }
+
+            profile.name = name;
+            profile.pronouns =
+                document.getElementById("profile-pronouns").value.trim();
+            profile.source =
+                document.getElementById("profile-source").value.trim();
+            profile.role =
+                document.getElementById("profile-role").value.trim();
+            profile.personality =
+                document.getElementById("profile-personality").value;
+            profile.appearance =
+                document.getElementById("profile-appearance").value;
+            profile.notes =
+                document.getElementById("profile-notes").value;
+
+            saveAlterProfiles();
+            showAlters();
+        });
+ }
+
+ /* ===== DIARY.EXE ===== */
+
+ async function showDiary() {
     const { data: { user }, error: userError } =
         await loveExeSupabase.auth.getUser();
 
@@ -5543,60 +5756,71 @@ async function showDiary() {
         .order("created_at", { ascending: false });
 
     if (error) {
-        console.error("DIARY.EXE:", error.message);
+        console.error("DIARY.EXE load error:", error.message);
         alert("couldnt load your diary ♡");
         return;
     }
 
     computerScreen.innerHTML = `
-        <div style="padding:16px;background:#c0c0c0;color:#000;
-                    font-family:Tahoma,sans-serif;min-height:350px;">
-            <h2 style="margin-top:0;">📔 DIARY.EXE ♡</h2>
-            <p>your little corner of the world ♡</p>
+        <div style="background:#008080;min-height:100%;
+                    padding:14px;box-sizing:border-box;
+                    font-family:Tahoma,sans-serif;">
+            <div style="background:#c0c0c0;border:2px outset white;
+                        max-width:600px;margin:auto;padding:12px;color:#000;">
+                <div style="background:navy;color:white;padding:8px;
+                            font-weight:bold;">
+                    📔 DIARY.EXE ♡
+                </div>
 
-            <form id="diary-form">
-                <input id="diary-title" maxlength="100"
-                    placeholder="entry title..."
-                    required
-                    style="display:block;width:95%;padding:7px;margin-bottom:8px;">
+                <form id="diary-form">
+                    <label for="diary-title">entry title</label>
+                    <input id="diary-title" maxlength="100"
+                        placeholder="a little title..." required
+                        style="display:block;box-sizing:border-box;
+                               width:100%;padding:7px;margin:6px 0 12px;">
 
-                <textarea id="diary-content" maxlength="20000"
-                    placeholder="write your thoughts here..."
-                    required rows="5"
-                    style="box-sizing:border-box;width:100%;padding:8px;"></textarea>
+                    <label for="diary-content">dear diary...</label>
+                    <textarea id="diary-content" maxlength="20000"
+                        placeholder="write your thoughts here ♡" required
+                        style="display:block;box-sizing:border-box;
+                               width:100%;height:160px;padding:7px;
+                               margin:6px 0 12px;"></textarea>
 
-                <button type="submit" id="diary-save">♡ save entry</button>
-                <button type="button" id="diary-cancel" hidden>cancel edit</button>
-            </form>
+                    <button id="diary-save" type="submit">💾 SAVE ENTRY</button>
+                    <button id="diary-cancel" type="button" hidden>
+                        CANCEL EDIT
+                    </button>
+                </form>
 
-            <p id="diary-status" aria-live="polite"></p>
-            <hr>
-            <h3>♡ diary entries ♡</h3>
-            <div id="diary-list"></div>
-            <button id="diary-back" type="button">← back to desktop</button>
+                <p id="diary-status" role="status"></p>
+                <hr>
+                <h3>♡ saved entries</h3>
+                <div id="diary-entry-list"></div>
+                <button id="diary-back" type="button">↩ BACK TO DESKTOP</button>
+            </div>
         </div>
     `;
 
     const form = document.getElementById("diary-form");
     const titleInput = document.getElementById("diary-title");
     const contentInput = document.getElementById("diary-content");
-    const status = document.getElementById("diary-status");
-    const list = document.getElementById("diary-list");
     const saveButton = document.getElementById("diary-save");
     const cancelButton = document.getElementById("diary-cancel");
+    const status = document.getElementById("diary-status");
+    const list = document.getElementById("diary-entry-list");
 
     let editingId = null;
 
     function resetForm() {
         editingId = null;
         form.reset();
-        saveButton.textContent = "♡ save entry";
+        saveButton.textContent = "💾 SAVE ENTRY";
         cancelButton.hidden = true;
     }
 
     cancelButton.addEventListener("click", resetForm);
 
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener("submit", async event => {
         event.preventDefault();
 
         const title = titleInput.value.trim();
@@ -5612,7 +5836,7 @@ async function showDiary() {
 
         let result;
 
-        if (editingId) {
+        if (editingId !== null) {
             result = await loveExeSupabase
                 .from("diary_entries")
                 .update({
@@ -5632,229 +5856,107 @@ async function showDiary() {
                 });
         }
 
-        if (saveError) {
-            console.error("DIARY.EXE save error:", saveError.message);
-            status.textContent = "couldn't save — please try again ♡";
+        saveButton.disabled = false;
+
+        if (result.error) {
+            console.error("DIARY.EXE save error:", result.error.message);
+            status.textContent = "couldnt save. please try again ♡";
             return;
         }
 
-        showDiary();
+        await showDiary();
     });
 
-    document.getElementById("diary-back").addEventListener("click", renderDesktop);
+    if (!entries || entries.length === 0) {
+        list.textContent = "no entries yet... write the first one! ♡";
+    }
+
+    for (const entry of entries || []) {
+        const card = document.createElement("article");
+        card.style.cssText =
+            "background:white;border:1px solid #808080;" +
+            "padding:10px;margin:12px 0;";
+
+        const heading = document.createElement("h4");
+        heading.textContent = entry.title || "untitled ♡";
+
+        const date = document.createElement("small");
+        date.textContent = entry.created_at
+            ? new Date(entry.created_at).toLocaleString()
+            : "";
+
+        const body = document.createElement("p");
+        body.style.whiteSpace = "pre-wrap";
+        body.textContent = entry.content || "";
+
+        card.append(heading, date, body);
+
+        if (entry.user_id === user.id) {
+            const editButton = document.createElement("button");
+            editButton.textContent = "✏️ EDIT";
+
+            editButton.addEventListener("click", () => {
+                editingId = entry.id;
+                titleInput.value = entry.title || "";
+                contentInput.value = entry.content || "";
+                saveButton.textContent = "💾 SAVE CHANGES";
+                cancelButton.hidden = false;
+                titleInput.focus();
+                form.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
+            });
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "🗑️ DELETE";
+            deleteButton.style.marginLeft = "6px";
+
+            deleteButton.addEventListener("click", async () => {
+                if (!confirm("delete this diary entry forever? ♡")) return;
+
+                deleteButton.disabled = true;
+
+                const { error: deleteError } = await loveExeSupabase
+                    .from("diary_entries")
+                    .delete()
+                    .eq("id", entry.id)
+                    .eq("user_id", user.id);
+
+                if (deleteError) {
+                    console.error("DIARY.EXE delete error:", deleteError.message);
+                    alert("couldnt delete this entry ♡");
+                    deleteButton.disabled = false;
+                    return;
+                }
+
+                await showDiary();
+            });
+
+            card.append(editButton, deleteButton);
+        } else {
+            const shared = document.createElement("small");
+            shared.textContent = "♡ shared with you";
+            card.append(shared);
+        }
+
+        list.append(card);
+    }
+
+    document.getElementById("diary-back")
+        .addEventListener("click", renderDesktop);
 }
 
+    const removeImageButton = document.getElementById("alter-remove-image");
 
- function newAlterProfile(name) {
-    return {
-        id: Date.now().toString() + Math.random().toString(36).slice(2),
-        name: name,
-        pronouns: "",
-        role: "",
-        personality: "",
-        likes: "",
-        dislikes: "",
-        hobbies: "",
-        notes: "",
-        image: "",
-        customSections: []
-    };
- }
-
- function renderAlterList() {
-    const list = document.getElementById("alter-list");
-    if (!list) return;
-
-    const names = [...new Set(premadeAlterNames.map(name => name.trim()))];
-
-    const all = [
-        ...names.map(name => ({
-            id: "premade-" + name.toLowerCase(),
-            name
-        })),
-        ...alterProfiles
-    ];
-
-    const filtered = all.filter(alter => {
-        const name = (alter.name || "").toLowerCase();
-        return name.includes(alterSearch) &&
-            (alterLetter === "ALL" || name.toUpperCase().startsWith(alterLetter));
-    });
-
-    list.innerHTML = filtered.map(alter => `
-        <button class="alter-entry" data-alter-id="${escapeAttribute(alter.id)}">
-            ♡ ${escapeHTML(alter.name || "unnamed alter")}
-        </button>
-    `).join("") || "<p>no alters found ♡</p>";
-
-    list.querySelectorAll(".alter-entry").forEach(button => {
-        button.addEventListener("click", () => {
-            const id = button.dataset.alterId;
-            let profile = alterProfiles.find(item => item.id === id);
-
-            if (!profile) {
-                const selected = filtered.find(item => item.id === id);
-                if (!selected) return;
-
-                profile = newAlterProfile(selected.name);
-                alterProfiles.push(profile);
-                saveAlterProfiles();
-            }
-
-            editAlter(profile.id);
-        });
-    });
- }
-
- function editAlter(id) {
-    const profile = alterProfiles.find(item => item.id === id);
-    if (!profile) return;
-
-    if (!Array.isArray(profile.customSections)) {
-        profile.customSections = [];
-    }
-
-    computerScreen.innerHTML = `
-        <div class="alters-window alter-profile-page">
-            <div class="alters-titlebar">
-                🧩 ALTER PROFILE.EXE
-                <button id="alter-back">← DATABASE</button>
-            </div>
-
-            <h1>♡ ${escapeHTML(profile.name || "unnamed alter")} ♡</h1>
-            <p>your own little corner of the system ♡</p>
-
-            <div class="alter-picture">
-                <img alt="alter profile picture"
-                    src="${profile.image || ""}"
-                    style="${profile.image ? "" : "display:none"}">
-                ${profile.image ? "" : "<p>no picture yet ♡</p>"}
-            </div>
-
-            <label class="alter-field">
-                profile picture
-                <input type="file" id="alter-image" accept="image/*">
-            </label>
-            <button id="alter-remove-image">REMOVE PICTURE</button>
-
-            <div class="alter-profile-fields">
-                ${[
-                    ["name", "Name"],
-                    ["pronouns", "Pronouns"],
-                    ["role", "Role"],
-                    ["personality", "Personality"],
-                    ["likes", "Likes"],
-                    ["dislikes", "Dislikes"],
-                    ["hobbies", "Hobbies"],
-                    ["notes", "Extra notes"]
-                ].map(([key, label]) => `
-                    <label class="alter-field">
-                        ${label}
-                        <textarea data-field="${key}" placeholder="write here...">${escapeHTML(profile[key] || "")}</textarea>
-                    </label>
-                `).join("")}
-            </div>
-
-            <hr>
-            <h2>♡ MY OWN SECTIONS ♡</h2>
-            <p>add anything you want! interests, favourites, memories, headcanons...</p>
-
-            <div id="custom-sections">
-                ${profile.customSections.map((section, index) => `
-                    <div class="alter-custom-section">
-                        <label class="alter-field">
-                            section title
-                            <input data-section-title="${index}"
-                                value="${escapeAttribute(section.title || "")}"
-                                placeholder="e.g. favourite things">
-                        </label>
-                        <label class="alter-field">
-                            section content
-                            <textarea data-section-content="${index}"
-                                placeholder="write anything here...">${escapeHTML(section.content || "")}</textarea>
-                        </label>
-                        <button type="button" data-remove-section="${index}">REMOVE SECTION</button>
-                    </div>
-                `).join("")}
-            </div>
-
-            <button type="button" id="add-custom-section">＋ ADD A NEW SECTION</button>
-
-            <div class="alter-actions">
-                <button id="alter-save">SAVE PROFILE ♡</button>
-                <button id="alter-delete">DELETE PROFILE</button>
-            </div>
-        </div>
-    `;
-
-    function collectAlterFields() {
-        computerScreen.querySelectorAll("[data-field]").forEach(field => {
-            profile[field.dataset.field] = field.value.trim();
-        });
-
-        computerScreen.querySelectorAll("[data-section-title]").forEach(field => {
-            const index = Number(field.dataset.sectionTitle);
-            if (profile.customSections[index]) {
-                profile.customSections[index].title = field.value;
-            }
-        });
-
-        computerScreen.querySelectorAll("[data-section-content]").forEach(field => {
-            const index = Number(field.dataset.sectionContent);
-            if (profile.customSections[index]) {
-                profile.customSections[index].content = field.value;
-            }
-        });
-    }
-
-    document.getElementById("alter-back").addEventListener("click", showAlters);
-
-    document.getElementById("add-custom-section").addEventListener("click", () => {
-        collectAlterFields();
-        profile.customSections.push({ title: "", content: "" });
-        saveAlterProfiles();
-        editAlter(id);
-    });
-
-    document.querySelectorAll("[data-remove-section]").forEach(button => {
-        button.addEventListener("click", () => {
+    if (removeImageButton) {
+        removeImageButton.addEventListener("click", () => {
             collectAlterFields();
-            profile.customSections.splice(Number(button.dataset.removeSection), 1);
+            profile.image = "";
             saveAlterProfiles();
             editAlter(id);
         });
-    });
-
-    document.getElementById("alter-image").addEventListener("change", event => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            alert("please choose an image ♡");
-            return;
-        }
-
-        if (file.size > 500000) {
-            alert("please use an image smaller than 500 KB ♡");
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            collectAlterFields();
-            profile.image = reader.result;
-            saveAlterProfiles();
-            editAlter(id);
-        };
-        reader.readAsDataURL(file);
-    });
-
-    document.getElementById("alter-remove-image").addEventListener("click", () => {
-        collectAlterFields();
-        profile.image = "";
-        saveAlterProfiles();
-        editAlter(id);
-    });
+    }
 
     document.getElementById("alter-save").addEventListener("click", () => {
         collectAlterFields();
@@ -5865,12 +5967,13 @@ async function showDiary() {
 
     document.getElementById("alter-delete").addEventListener("click", () => {
         if (!confirm("delete this profile?")) return;
+
         alterProfiles = alterProfiles.filter(item => item.id !== id);
         saveAlterProfiles();
         showAlters();
     });
- }
+}
 
-startLoveExe();
+showHome();
 
 });
