@@ -1,6 +1,18 @@
 const loveExeSupabase = window.supabase.createClient(
     "https://zqsdejzkyajakilvmrxr.supabase.co",
     "sb_publishable_mnhMNS9z4Wzpt4vOQuOlVA_F1C2kw0a"
+    // TEMPORARY LOVE.EXE CONNECTION TEST
+loveExeSupabase
+    .from("profiles")
+    .select("id")
+    .limit(1)
+    .then(({ data, error }) => {
+        if (error) {
+            console.error("LOVE.EXE connection test failed:", error.message);
+        } else {
+            console.log("♡ LOVE.EXE CONNECTED TO SUPABASE!", data);
+        }
+    });
 );
 document.addEventListener("DOMContentLoaded", () => {
 
