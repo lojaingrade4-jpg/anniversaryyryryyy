@@ -779,13 +779,20 @@ const music = [
                 top: "4%",
                 left: "46%"
             },
-            {
-                id: "alters-app",
-                icon: "🧩",
-                label: "ALTERS.EXE",
-                top: "38%",
-                right: "10%"
-            }
+         {
+    id: "alters-app",
+    icon: "🧩",
+    label: "ALTERS.EXE",
+    top: "38%",
+    right: "10%"
+},
+{
+    id: "diary-app",
+    icon: "📔",
+    label: "DIARY.EXE",
+    top: "56%",
+    right: "25%"
+}
         ];
 
         computerScreen.innerHTML = `
@@ -908,8 +915,11 @@ const music = [
 
         document.getElementById("notes-app")
             .addEventListener("click", showNotes);
-        document.getElementById("alters-app")
-            .addEventListener("click", showAlters);
+       document.getElementById("alters-app")
+    .addEventListener("click", showAlters);
+        document.getElementById("diary-app")
+    .addEventListener("click", showDiary);
+                              
 
         document.getElementById("desktop-icons")
             .addEventListener("click", function(event) {
@@ -5514,6 +5524,154 @@ function escapeAttribute(value) {
 
     renderAlterList();
  }
+    
+async function showDiary() {
+    const { data: { user }, error: userError } =
+        await loveExeSupabase.auth.getUser();
+
+    if (userError || !user) {
+        showAuthScreen("please log in to open your diary ♡");
+        return;
+    }
+
+    const { data: entries, error } = await loveExeSupabase
+        .from("diary_entries")
+        .select("id, user_id, title, content, created_at")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        console.error("DIARY.EXE error:", error.message);
+        alert("DIARY.EXE couldn't load. please try again ♡");
+        return;
+    }
+
+    computerScreen.innerHTML = `
+        <div style="
+            background:#008080;
+            min-height:100%;
+            padding:14px;
+            box-sizing:border-box;
+            font-family:Tahoma, sans-serif;
+        ">
+            <div style="
+                background:#c0c0c0;
+                border:2px outset white;
+                max-width:600px;
+                margin:auto;
+                padding:12px;
+                color:#000;
+            ">
+                <div style="
+                    background:navy;
+                    color:white;
+                    padding:8px;
+                    font-weight:bold;
+                    margin-bottom:12px;
+                ">📔 DIARY.EXE — MY ENTRIES ♡</div>
+
+                <label for="diary-title">entry title</label>
+                <input id="diary-title"
+                    maxlength="100"
+                    placeholder="a little title..."
+                    style="display:block;width:95%;margin:6px 0 12px;padding:7px;">
+
+                <label for="diary-content">dear diary...</label>
+                <textarea id="diary-content"
+                    maxlength="20000"
+                    placeholder="write your thoughts here ♡"
+                    style="display:block;width:95%;height:180px;margin:6px 0 12px;padding:7px;resize:vertical;"></textarea>
+
+                <button id="diary-save">💾 SAVE ENTRY</button>
+                <button id="diary-back">↩ BACK TO DESKTOP</button>
+
+                <p id="diary-status" role="status"></p>
+
+                <hr>
+                <h3>♡ saved entries</h3>
+                <div id="diary-entry-list"></div>
+            </div>
+        </div>
+    `;
+
+    const status = document.getElementById("diary-status");
+    const list = document.getElementById("diary-entry-list");
+
+    // Show only entries belonging to the signed-in user,
+    // plus entries owned by the partner when this is your account.
+    const { data: profile, error: profileError } = await loveExeSupabase
+        .from("profiles")
+        .select("username")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (profileError) {
+        status.textContent = "could not check your profile ♡";
+        return;
+    }
+
+    // Until account identities are configured, show only own entries.
+    const visibleEntries = (entries || []).filter(
+        entry => entry.user_id === user.id
+    );
+
+    if (visibleEntries.length === 0) {
+        list.textContent = "no entries yet ♡";
+    } else {
+        list.replaceChildren();
+
+        visibleEntries.forEach(entry => {
+            const card = document.createElement("div");
+            card.style.cssText =
+                "background:white;border:1px solid #777;padding:10px;margin:10px 0;";
+
+            const heading = document.createElement("strong");
+            heading.textContent = entry.title || "untitled ♡";
+
+            const body = document.createElement("p");
+            body.style.whiteSpace = "pre-wrap";
+            body.textContent = entry.content || "";
+
+            const date = document.createElement("small");
+            date.textContent = entry.created_at
+                ? new Date(entry.created_at).toLocaleString()
+                : "";
+
+            card.append(heading, body, date);
+            list.appendChild(card);
+        });
+    }
+
+    document.getElementById("diary-save").addEventListener("click", async () => {
+        const title = document.getElementById("diary-title").value.trim();
+        const content = document.getElementById("diary-content").value.trim();
+
+        if (!title && !content) {
+            status.textContent = "write something first !";
+            return;
+        }
+
+        status.textContent = "saving... ";
+
+        const { error: saveError } = await loveExeSupabase
+            .from("diary_entries")
+            .insert({
+                user_id: user.id,
+                title,
+                content
+            });
+
+        if (saveError) {
+            console.error("DIARY.EXE save error:", saveError.message);
+            status.textContent = "couldn't save — please try again ♡";
+            return;
+        }
+
+        showDiary();
+    });
+
+    document.getElementById("diary-back").addEventListener("click", renderDesktop);
+}
+
 
  function newAlterProfile(name) {
     return {
