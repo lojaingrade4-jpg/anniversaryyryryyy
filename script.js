@@ -1,4 +1,3 @@
-
 const loveExeSupabase = window.supabase.createClient(
     "https://zqsdejzkyajakilvmrxr.supabase.co",
     "sb_publishable_mnhMNS9z4Wzpt4vOQuOlVA_F1C2kw0a"
