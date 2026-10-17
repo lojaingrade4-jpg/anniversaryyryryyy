@@ -3261,3 +3261,26 @@ body.corrupted {
     border-top: 1px dashed #d99bc2;
     margin: 24px 0;
 }
+.desktop-icons {
+    position: absolute;
+    top: 12px;
+    left: 10px;
+    right: 10px;
+    bottom: 36px;
+    display: flex !important;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 10;
+}
+
+.desktop-icon {
+    position: relative !important;
+    flex: 0 0 100px;
+    box-sizing: border-box;
+}
