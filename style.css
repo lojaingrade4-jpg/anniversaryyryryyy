@@ -3262,15 +3262,16 @@ body.corrupted {
     margin: 24px 0;
 }
 
+
 .desktop-icons {
-    position: absolute;
-    top: 12px;
-    left: 10px;
-    right: 10px;
-    bottom: 36px;
+    position: absolute !important;
+    top: 12px !important;
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 36px !important;
 
     display: grid !important;
-    grid-template-columns: repeat(4, 100px);
+    grid-template-columns: repeat(4, 100px) !important;
     grid-auto-rows: 115px;
 
     align-content: start;
@@ -3279,12 +3280,30 @@ body.corrupted {
 
     overflow-y: auto;
     overflow-x: hidden;
-    z-index: 10;
+
+    z-index: 100 !important;
+    box-sizing: border-box;
 }
 
-.desktop-icon {
+.desktop-icons .desktop-icon {
     position: relative !important;
-    width: 100px;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+
+    display: flex !important;
+    width: 100px !important;
+    min-width: 100px;
+    height: 105px;
     min-height: 105px;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+
+    visibility: visible !important;
+    opacity: 1 !important;
     box-sizing: border-box;
 }
