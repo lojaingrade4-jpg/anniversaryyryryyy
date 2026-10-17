@@ -749,90 +749,73 @@ const icons = [
     }
 ];
 
-        computerScreen.innerHTML = `
-            <div class="desktop">
+        
+computerScreen.innerHTML = `
+    <div class="desktop">
 
+        <div class="desktop-icons" id="desktop-icons">
+
+            ${icons.map((item, index) => `
                 <div
-                    class="desktop-icons"
-                    id="desktop-icons"
+                    class="desktop-icon love-desktop-icon"
+                    id="${item.id}"
                     style="
-                        position: absolute;
-                        inset: 0 0 30px 0;
-                        display: block;
+                        position: relative;
+                        width: 100px;
+                        min-width: 100px;
+                        min-height: 105px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: flex-start;
+                        text-align: center;
+                        cursor: pointer;
+                        z-index: 10;
                     "
                 >
+                    <div
+                        class="icon"
+                        style="
+                            font-size: 42px;
+                            line-height: 50px;
+                            width: 70px;
+                            height: 55px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        "
+                    >
+                        ${item.icon}
+                    </div>
 
-                    ${icons.map(item => `
-                        <div
-                            class="desktop-icon love-desktop-icon"
-                            id="${item.id}"
-                            style="
-                                position:absolute;
-                                top:${item.top};
-                                ${item.left ? `left:${item.left};` : ""}
-                                ${item.right ? `right:${item.right};` : ""}
-                                width:100px;
-                                min-height:105px;
-                                display:flex;
-                                flex-direction:column;
-                                align-items:center;
-                                justify-content:flex-start;
-                                text-align:center;
-                                cursor:pointer;
-                                z-index:10;
-                            "
-                        >
-
-                            <div
-                                class="icon"
-                                style="
-                                    font-size:52px;
-                                    line-height:58px;
-                                    width:70px;
-                                    height:65px;
-                                    display:flex;
-                                    align-items:center;
-                                    justify-content:center;
-                                "
-                            >
-                                ${item.icon}
-                            </div>
-
-                            <span
-                                style="
-                                    font-size:12px;
-                                    font-weight:bold;
-                                    margin-top:4px;
-                                    max-width:100px;
-                                    text-shadow:
-                                        1px 1px #000,
-                                        -1px -1px #000,
-                                        1px -1px #000,
-                                        -1px 1px #000;
-                                "
-                            >
-                                ${item.label}
-                            </span>
-
-                        </div>
-                    `).join("")}
-
+                    <span style="
+                        font-size: 12px;
+                        font-weight: bold;
+                        margin-top: 4px;
+                        max-width: 100px;
+                        overflow-wrap: anywhere;
+                        color: white;
+                        text-shadow:
+                            1px 1px #000,
+                            -1px -1px #000,
+                            1px -1px #000,
+                            -1px 1px #000;
+                    ">
+                        ${item.label}
+                    </span>
                 </div>
+            `).join("")}
 
-                <div class="desktop-taskbar">
+        </div>
 
-                    <span>♡ LOVE.EXE</span>
+        <div class="desktop-taskbar">
+            <span>♡ LOVE.EXE</span>
+            <button id="switch-front">SWITCH FRONT</button>
+            <span id="desktop-time"></span>
+        </div>
 
-                    <button id="switch-front">
-                        SWITCH FRONT
-                    </button>
-
-                    <span id="desktop-time"></span>
-
-                </div>
-
-            </div>
-        `;
+    </div>
+`;
 
         updateClock();
 
