@@ -3360,15 +3360,119 @@ body.corrupted {
 }
 
 /* Small screens: still four columns, with smaller icons */
+
+/* =========================================================
+   LOVE.EXE DESKTOP ICON FIX
+========================================================= */
+
+.desktop {
+    position: absolute !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.desktop-icons {
+    position: absolute !important;
+    top: 12px !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 48px !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 100px)) !important;
+    grid-auto-rows: 110px !important;
+
+    justify-content: start !important;
+    align-content: start !important;
+    justify-items: center !important;
+    align-items: start !important;
+
+    gap: 8px 4px !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    z-index: 100 !important;
+}
+
+.desktop-icons > .desktop-icon {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+
+    width: 100px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 105px !important;
+    min-height: 105px !important;
+
+    padding: 2px !important;
+    margin: 0 !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-sizing: border-box !important;
+    text-align: center !important;
+    cursor: pointer !important;
+}
+
+.desktop-icons > .desktop-icon .icon {
+    display: flex !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    width: 70px !important;
+    height: 55px !important;
+    font-size: 42px !important;
+    line-height: 50px !important;
+}
+
+.desktop-icons > .desktop-icon span {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100px !important;
+
+    margin-top: 4px !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    font-weight: bold !important;
+
+    color: white !important;
+    text-align: center !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+}
+
+.desktop-taskbar {
+    position: absolute !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 500 !important;
+}
+
 @media (max-width: 650px) {
     .desktop-icons {
         grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-        gap: 8px 2px !important;
+        column-gap: 2px !important;
     }
 
     .desktop-icons > .desktop-icon {
         width: 100% !important;
-        min-width: 0 !important;
     }
 
     .desktop-icons > .desktop-icon .icon {
