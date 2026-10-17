@@ -3263,47 +3263,119 @@ body.corrupted {
 }
 
 
+/* ===== LOVE.EXE DESKTOP ICONS: FIXED 4-COLUMN GRID ===== */
+
 .desktop-icons {
     position: absolute !important;
     top: 12px !important;
     left: 10px !important;
     right: 10px !important;
-    bottom: 36px !important;
+    bottom: 40px !important;
+
+    transform: none !important;
 
     display: grid !important;
     grid-template-columns: repeat(4, 100px) !important;
-    grid-auto-rows: 115px;
+    grid-auto-rows: 115px !important;
 
-    align-content: start;
-    justify-content: start;
-    gap: 10px;
+    align-content: start !important;
+    justify-content: start !important;
+    justify-items: center !important;
 
-    overflow-y: auto;
-    overflow-x: hidden;
+    gap: 8px 4px !important;
+
+    width: auto !important;
+    max-width: none !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
 
     z-index: 100 !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
 }
 
-.desktop-icons .desktop-icon {
+.desktop-icons > .desktop-icon {
     position: relative !important;
     inset: auto !important;
-    top: auto !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
+    transform: none !important;
 
     display: flex !important;
-    width: 100px !important;
-    min-width: 100px;
-    height: 105px;
-    min-height: 105px;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
 
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    width: 100px !important;
+    min-width: 0 !important;
+    height: 105px !important;
+    min-height: 105px !important;
+
+    margin: 0 !important;
+    padding: 2px !important;
 
     visibility: visible !important;
     opacity: 1 !important;
-    box-sizing: border-box;
+    box-sizing: border-box !important;
+
+    color: white !important;
+    text-align: center !important;
+}
+
+.desktop-icons > .desktop-icon .icon {
+    flex-shrink: 0 !important;
+    font-size: 42px !important;
+    line-height: 50px !important;
+    width: 70px !important;
+    height: 55px !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.desktop-icons > .desktop-icon span {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100px !important;
+
+    margin-top: 4px !important;
+
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+
+    overflow-wrap: anywhere !important;
+    text-align: center !important;
+    color: white !important;
+}
+
+/* Keep the desktop behind the icons and taskbar */
+.desktop {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+}
+
+.desktop-taskbar {
+    z-index: 500 !important;
+}
+
+/* Small screens: still four columns, with smaller icons */
+@media (max-width: 650px) {
+    .desktop-icons {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 8px 2px !important;
+    }
+
+    .desktop-icons > .desktop-icon {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .desktop-icons > .desktop-icon .icon {
+        font-size: 32px !important;
+    }
+
+    .desktop-icons > .desktop-icon span {
+        font-size: 10px !important;
+    }
 }
