@@ -364,23 +364,27 @@ input:focus {
 .desktop-icons {
     position: absolute;
 
-    top: 18px;
-    left: 15px;
+    top: 50%;
+    left: 50%;
 
-    display: grid;
+    transform: translate(-50%, -50%);
 
-    grid-template-columns:
-        repeat(6, 82px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
 
-    gap: 18px 22px;
+    gap: 8px;
 
-    justify-content: start;
+    width: max-content;
+    max-width: 98%;
 
     z-index: 2;
 }
 
 .desktop-icon {
-    width: 82px;
+    width: 48px;
+    flex: 0 0 48px;
 
     padding: 3px;
 
@@ -398,7 +402,7 @@ input:focus {
 }
 
 .desktop-icon .icon {
-    font-size: 32px;
+    font-size: 25px;
 
     margin-bottom: 4px;
 
@@ -409,9 +413,11 @@ input:focus {
 .desktop-icon span {
     display: block;
 
-    font-size: 11px;
+    font-size: 8px;
 
     line-height: 1.2;
+
+    overflow-wrap: anywhere;
 }
 
 .desktop-icon:hover {
@@ -423,7 +429,6 @@ input:focus {
 .desktop-icon:active {
     background: rgba(40,80,150,.8);
 }
-
 
 /* =========================================================
    XP WELCOME
